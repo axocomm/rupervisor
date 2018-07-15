@@ -1,3 +1,5 @@
+require 'rupervisor/scenario'
+
 require 'open3'
 
 module Rupervisor
@@ -33,6 +35,17 @@ module Rupervisor
       puts "return code: #{status.exitstatus}"
 
       @@last_run = name
+    end
+
+    # TODO: Maybe add DSLContext and DSL-specific Scenario class? This
+    # would also make specialized methods available.
+    def self.run_file!(rupfile)
+      File.open(rupfile.path) do |fh|
+        def self.begin!
+          run! :init
+        end
+        eval fh.read
+      end
     end
   end
 

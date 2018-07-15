@@ -1,3 +1,5 @@
+require 'rupervisor/rupfile'
+
 require 'thor'
 
 module Rupervisor
@@ -13,7 +15,7 @@ module Rupervisor
 
     desc 'run RUPFILE', 'Run a job'
     def run_rup(rupfile = 'Rupfile')
-      puts "Yo, it's #{rupfile}"
+      Rupfile.new(rupfile).deploy!
     end
   end
 end

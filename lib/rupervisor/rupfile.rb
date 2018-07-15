@@ -19,10 +19,11 @@ module Rupervisor
     def deploy!(mode = :deploy)
       begin
         # Context.new(self, mode).run!
+        Context.run_file!(self)
         puts "Would do a #{mode.to_s}"
       # TODO: Ensure actual handling of different exceptions.
-      rescue
-        puts 'Oh well'
+      rescue Exception => e
+        raise
       end
     end
   end
