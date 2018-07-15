@@ -2,12 +2,13 @@ require 'json'
 
 module Rupervisor
   class Scenario
-    attr_accessor :name, :command, :params, :outcomes
+    attr_accessor :name, :command, :params, :outcomes, :default_outcome
 
     def initialize(name, &block)
       @name = name
       @params = {}
       @outcomes = {}
+      @default_outcome = nil
 
       yield self
     end
@@ -40,6 +41,11 @@ module Rupervisor
     # :val] to be executed appropriately?
     def on(code, step)
       @outcomes[code] = step
+      self
+    end
+
+    def otherwise(step)
+      @default_outcome = step
       self
     end
 

@@ -42,7 +42,7 @@ module Rupervisor
 
       @last_run = name
 
-      ns = s.outcomes[rv]
+      ns = s.outcomes[rv] || s.default_outcome
       raise OutcomeUndefined, "No outcome registered for #{rv}" if ns.nil?
 
       run_next! ns, rv
@@ -53,6 +53,8 @@ module Rupervisor
         run! next_step
       elsif next_step.is_a?(Exit)
         next_step.call(last_rv)
+      elsif next_step.is_a?(Retry)
+        puts "retries #{@last_run}"
       else
         puts "Don't know what #{next_step} is"
       end
@@ -63,6 +65,7 @@ module Rupervisor
     end
   end
 
+  # TODO: Class hierarchy of actions (retry, exit, run another Scenario)
   class Exit
     attr_accessor :rv
 
@@ -84,6 +87,9 @@ module Rupervisor
 
       Proc.new { exit rv }.call
     end
+  end
+
+  class Retry
   end
 
   class ScenarioUndefined < StandardError

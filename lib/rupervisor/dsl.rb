@@ -22,8 +22,11 @@ module Rupervisor
     end
 
     def just_exit
-      puts 'just exiting'
       Exit.new
+    end
+
+    def try_again
+      Retry.new
     end
   end
 end

@@ -121,3 +121,4 @@ the need to constantly check up on them.
 - Ability to dump evaluated `Ruperfile` to some easily-readable format
 - Ability to define scenarios elsewhere and include them (even if it's
   just a friendlier DSL method for `require_relative`)
+- Ability to pipe stderr or stdout to actions?
