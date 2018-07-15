@@ -56,7 +56,7 @@ module Rupervisor
     private
 
     def register!
-      Context.register!(self)
+      Context.instance.register!(self)
     end
   end
 end

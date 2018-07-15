@@ -9,11 +9,10 @@ module Rupervisor
     end
 
     def begin!
-      Context.run! :init
+      Context.instance.run! :init
     end
 
     def self.evaluate(ctx, content)
-      # eval(content)
       self.new.instance_eval { eval(content) }
     end
   end
