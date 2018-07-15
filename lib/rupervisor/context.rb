@@ -38,8 +38,8 @@ module Rupervisor
       @@last_run = name
     end
 
-    def self.run_file!(rupfile)
-      DSL.evaluate(self, rupfile.content)
+    def self.run_file!(ruperfile)
+      DSL.evaluate(self, ruperfile.content)
     end
   end
 

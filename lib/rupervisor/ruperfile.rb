@@ -3,7 +3,7 @@ require 'rupervisor/context'
 # TODO: Maybe make some components of this a common DSL-generating
 # library?
 module Rupervisor
-  class Rupfile
+  class Ruperfile
     DEFAULT_PATH = File.join(Dir.pwd, 'Dupfile')
 
     attr_reader :path

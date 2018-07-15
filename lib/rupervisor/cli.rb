@@ -1,4 +1,4 @@
-require 'rupervisor/rupfile'
+require 'rupervisor/ruperfile'
 
 require 'thor'
 
@@ -13,9 +13,9 @@ module Rupervisor
       # configure_logging!
     end
 
-    desc 'run RUPFILE', 'Run a job'
-    def run_rup(rupfile = 'Rupfile')
-      Rupfile.new(rupfile).deploy!
+    desc 'run RUPERFILE', 'Run a job'
+    def run_rup(ruperfile = 'Ruperfile')
+      Ruperfile.new(ruperfile).deploy!
     end
   end
 end
