@@ -1,4 +1,5 @@
 require 'rupervisor/context'
+require 'rupervisor/scenario'
 
 module Rupervisor
   class DSL
@@ -10,10 +11,38 @@ module Rupervisor
     # DSL Components #
     ##################
 
-    class Scenario
+    class Scenario < Rupervisor::Scenario
       def initialize(name, &block)
-        # TODO: Use .tap?
-        Rupervisor::Scenario.new(name, &block).register!
+        super(name)
+        tap(&block)
+        register!
+      end
+
+      def runs(command)
+        @command = command
+        self
+      end
+
+      # TODO: `using` for any extra parameters?
+      def with(params)
+        @params = params
+        self
+      end
+
+      def on(code, step)
+        @outcomes[code] = step
+        self
+      end
+
+      def otherwise(step)
+        @default_outcome = step
+        self
+      end
+
+      private
+
+      def register!
+        Context.instance.register!(self)
       end
     end
 

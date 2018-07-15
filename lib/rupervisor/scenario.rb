@@ -2,51 +2,18 @@ require 'json'
 
 module Rupervisor
   class Scenario
-    attr_accessor :name, :command, :params, :outcomes, :default_outcome
+    attr_reader :name, :command, :params, :outcomes, :default_outcome
 
-    def initialize(name, &block)
+    def initialize(name)
       @name = name
       @params = {}
       @outcomes = {}
       @default_outcome = nil
-
-      yield self
     end
 
-    def register!
-      Context.instance.register!(self)
-    end
-
-    # TODO: Clean command somehow?
-    def command
+    # TODO: Clean command
+    def prepared_command
       @command % @params
-    end
-
-    # DSL components
-    # TODO: Put these in the DSL class?
-
-    def runs(command)
-      @command = command
-      self
-    end
-
-    def with(params)
-      @params = params
-      self
-    end
-
-    # TODO: `using` for any extra parameters?
-
-    # TODO: Determine step type here instead and store as [:type,
-    # :val] to be executed appropriately?
-    def on(code, step)
-      @outcomes[code] = step
-      self
-    end
-
-    def otherwise(step)
-      @default_outcome = step
-      self
     end
 
     def to_h

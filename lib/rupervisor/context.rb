@@ -30,9 +30,9 @@ module Rupervisor
       s = @scenarios[name]
       raise ScenarioUndefined, "No scenario named #{name}" if s.nil?
 
-      status = Open3.popen3(s.command) do |_, out, err, t|
+      status = Open3.popen3(s.prepared_command) do |_, out, err, t|
         puts '----'
-        puts "command: #{s.command}\n\n"
+        puts "command: #{s.prepared_command}\n\n"
         puts "stdout:\n#{out.read}\n"
         puts "stderr:\n#{err.read}\n"
         t.value
