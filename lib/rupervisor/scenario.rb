@@ -10,8 +10,10 @@ module Rupervisor
       @outcomes = {}
 
       yield self
+    end
 
-      register!
+    def register!
+      Context.instance.register!(self)
     end
 
     # TODO: Clean command somehow?
@@ -20,6 +22,7 @@ module Rupervisor
     end
 
     # DSL components
+    # TODO: Put these in the DSL class?
 
     def runs(command)
       @command = command
@@ -51,12 +54,6 @@ module Rupervisor
 
     def to_json
       to_h.to_json
-    end
-
-    private
-
-    def register!
-      Context.instance.register!(self)
     end
   end
 end

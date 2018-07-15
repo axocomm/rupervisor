@@ -37,9 +37,25 @@ module Rupervisor
         puts "stderr:\n#{err.read}\n"
         t.value
       end
-      puts "return code: #{status.exitstatus}"
+      rv = status.exitstatus
+      puts "return code: #{rv}"
 
       @last_run = name
+
+      ns = s.outcomes[rv]
+      raise OutcomeUndefined, "No outcome registered for #{rv}" if ns.nil?
+
+      run_next! ns
+    end
+
+    def run_next!(next_step)
+      if next_step.is_a?(Symbol)
+        run! next_step
+      elsif next_step.is_a?(Exit)
+        next_step.call
+      else
+        puts "Don't know what #{next_step} is"
+      end
     end
 
     def run_file!(ruperfile)
@@ -47,6 +63,24 @@ module Rupervisor
     end
   end
 
+  class Exit
+    def initialize
+      @rv = 0
+    end
+
+    def with(rv = 0)
+      @rv = rv
+      self
+    end
+
+    def call
+      Proc.new { exit @rv }.call
+    end
+  end
+
   class ScenarioUndefined < StandardError
+  end
+
+  class OutcomeUndefined < StandardError
   end
 end

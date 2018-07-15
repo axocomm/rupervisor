@@ -2,9 +2,18 @@ require 'rupervisor/context'
 
 module Rupervisor
   class DSL
+    def self.evaluate(ctx, content)
+      self.new.instance_eval { eval(content) }
+    end
+
+    ##################
+    # DSL Components #
+    ##################
+
     class Scenario
       def initialize(name, &block)
-        Rupervisor::Scenario.new(name, &block)
+        # TODO: Use .tap?
+        Rupervisor::Scenario.new(name, &block).register!
       end
     end
 
@@ -12,8 +21,9 @@ module Rupervisor
       Context.instance.run! :init
     end
 
-    def self.evaluate(ctx, content)
-      self.new.instance_eval { eval(content) }
+    def just_exit
+      puts 'just exiting'
+      Exit.new
     end
   end
 end
