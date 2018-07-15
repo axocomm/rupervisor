@@ -45,14 +45,14 @@ module Rupervisor
       ns = s.outcomes[rv]
       raise OutcomeUndefined, "No outcome registered for #{rv}" if ns.nil?
 
-      run_next! ns
+      run_next! ns, rv
     end
 
-    def run_next!(next_step)
+    def run_next!(next_step, last_rv)
       if next_step.is_a?(Symbol)
         run! next_step
       elsif next_step.is_a?(Exit)
-        next_step.call
+        next_step.call(last_rv)
       else
         puts "Don't know what #{next_step} is"
       end
@@ -64,8 +64,10 @@ module Rupervisor
   end
 
   class Exit
+    attr_accessor :rv
+
     def initialize
-      @rv = 0
+      @rv = nil
     end
 
     def with(rv = 0)
@@ -73,8 +75,14 @@ module Rupervisor
       self
     end
 
-    def call
-      Proc.new { exit @rv }.call
+    def call(last_rv = 0)
+      rv = if @rv.nil?
+             last_rv
+           else
+             @rv
+           end
+
+      Proc.new { exit rv }.call
     end
   end
 
