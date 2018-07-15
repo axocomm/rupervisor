@@ -12,6 +12,10 @@ module Rupervisor
       @path = path
     end
 
+    def content
+      File.open(@path) { |fh| fh.read }
+    end
+
     def dump
       deploy! :dump
     end
