@@ -15,7 +15,7 @@ module Rupervisor
 
     desc 'run RUPERFILE', 'Run a job'
     def run_rup(ruperfile = 'Ruperfile')
-      Ruperfile.new(ruperfile).deploy!
+      Ruperfile.new(ruperfile).run!
     end
   end
 end

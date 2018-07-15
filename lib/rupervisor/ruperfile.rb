@@ -17,14 +17,13 @@ module Rupervisor
     end
 
     def dump
-      deploy! :dump
+      run! :dump
     end
 
-    def deploy!(mode = :deploy)
+    def run!(mode = :run)
       begin
         # Context.new(self, mode).run!
         Context.instance.run_file!(self)
-        puts "Would do a #{mode.to_s}"
       # TODO: Ensure actual handling of different exceptions.
       rescue Exception => e
         raise
