@@ -1,3 +1,4 @@
+require 'rupervisor/action'
 require 'rupervisor/context'
 require 'rupervisor/scenario'
 
@@ -29,33 +30,37 @@ module Rupervisor
         self
       end
 
-      def on(code, step)
-        @outcomes[code] = step
+      def on(code, action)
+        @actions[code] = action
         self
       end
 
-      def otherwise(step)
-        @default_outcome = step
+      def otherwise(action)
+        @default_action = action
         self
       end
 
       private
 
       def register!
-        Context.instance.register!(self)
+        Rupervisor::Scenario.register!(self)
       end
     end
 
     def begin!
-      Context.instance.run! :init
+      Context.instance.run!(Actions::RunScenario.new(:init))
+    end
+
+    def run(name)
+      Actions::RunScenario.new(name)
     end
 
     def just_exit
-      Exit.new
+      Actions::Exit.new
     end
 
     def try_again
-      Retry.new
+      Actions::Retry.new
     end
   end
 end
