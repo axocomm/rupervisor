@@ -4,7 +4,7 @@ require 'rupervisor/scenario'
 
 module Rupervisor
   class DSL
-    def self.evaluate(ctx, content)
+    def self.evaluate(content)
       self.new.instance_eval { eval(content) }
     end
 

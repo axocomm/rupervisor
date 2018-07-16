@@ -15,7 +15,7 @@ module Rupervisor
     #
     # TODO: This probably needs some better definition
     def run!(action)
-      next_action = action.call
+      next_action = action.call(self)
       @last_run = action
       if next_action
         run!(next_action)
@@ -25,7 +25,7 @@ module Rupervisor
     end
 
     def run_file!(ruperfile)
-      DSL.evaluate(self, ruperfile.content)
+      DSL.evaluate(ruperfile.content)
     end
   end
 end
