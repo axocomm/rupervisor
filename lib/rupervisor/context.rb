@@ -7,6 +7,8 @@ module Rupervisor
   class Context
     include Singleton
 
+    attr_reader :last_action, :last_result
+
     def initialize
       @last_run = nil
     end
@@ -15,8 +17,11 @@ module Rupervisor
     #
     # TODO: This probably needs some better definition
     def run!(action)
-      next_action = action.call(self)
-      @last_run = action
+      result, next_action = action.call(self)
+
+      @last_action = action
+      @last_result = result
+
       if next_action
         run!(next_action)
       else

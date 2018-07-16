@@ -108,8 +108,6 @@ the need to constantly check up on them.
 - DSL improvements, including
     - Setting a single action for multiple exit codes
     - Setting actions based on output content as well?
-    - Default actions, e.g. automatically exiting if no handlers are
-      defined
     - Better syntax for running subsequent `Scenario`s
     - Ability to pass arguments and/or provide rules for generating
       them on subsequent runs
@@ -122,3 +120,4 @@ the need to constantly check up on them.
 - Ability to define scenarios elsewhere and include them (even if it's
   just a friendlier DSL method for `require_relative`)
 - Ability to pipe stderr or stdout to actions?
+- Addressing code style concerns

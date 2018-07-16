@@ -54,7 +54,7 @@ module Rupervisor
 
         next_action = s.actions[rv] || s.default_action
         raise ActionUndefined, "No action defined for #{rv}" if next_action.nil?
-        next_action
+        [rv, next_action]
       end
 
       class ScenarioUndefined < StandardError
