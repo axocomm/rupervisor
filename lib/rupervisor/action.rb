@@ -2,7 +2,7 @@ require 'open3'
 
 module Rupervisor
   class Action
-    def call(ctx)
+    def call(_ctx, _last_action, _last_result)
       raise NotImplementedError
     end
   end
@@ -15,14 +15,13 @@ module Rupervisor
         @rv = nil
       end
 
-      def with(rv = 0)
+      def with(rv)
         @rv = rv
         self
       end
 
-      def call(ctx)
-        rv = @rv  # TODO
-
+      def call(_ctx, _last_action, last_result)
+        rv = @rv.nil? ? last_result : @rv
         Proc.new { exit rv }.call
       end
     end
@@ -38,7 +37,7 @@ module Rupervisor
         @name = name
       end
 
-      def call(ctx)
+      def call(ctx, *)
         s = ctx.scenarios[@name]
         raise ScenarioUndefined, "Scenario #{@name} not defined" if s.nil?
 
