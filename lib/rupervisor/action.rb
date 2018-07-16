@@ -39,7 +39,7 @@ module Rupervisor
       end
 
       def call(ctx)
-        s = Rupervisor::Scenario.by_name(@name)
+        s = ctx.scenarios[@name]
         raise ScenarioUndefined, "Scenario #{@name} not defined" if s.nil?
 
         status = Open3.popen3(s.prepared_command) do |_, out, err, t|

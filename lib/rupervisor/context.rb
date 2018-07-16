@@ -7,10 +7,15 @@ module Rupervisor
   class Context
     include Singleton
 
-    attr_reader :last_action, :last_result
+    attr_reader :last_action, :last_result, :scenarios
 
     def initialize
       @last_run = nil
+      @scenarios = {}
+    end
+
+    def register!(scenario)
+      @scenarios[scenario.name] = scenario
     end
 
     # Execute an action.

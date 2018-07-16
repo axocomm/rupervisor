@@ -15,7 +15,7 @@ module Rupervisor
     class Scenario < Rupervisor::Scenario
       def initialize(name, &block)
         super(name)
-        tap(&block)
+        yield self
         register!
       end
 
@@ -43,7 +43,7 @@ module Rupervisor
       private
 
       def register!
-        Rupervisor::Scenario.register!(self)
+        Context.instance.register!(self)
       end
     end
 

@@ -2,8 +2,6 @@ require 'json'
 
 module Rupervisor
   class Scenario
-    @@scenarios = {}
-
     attr_reader :name, :command, :params, :actions, :default_action
 
     def initialize(name)
@@ -29,15 +27,6 @@ module Rupervisor
 
     def to_json
       to_h.to_json
-    end
-
-    def self.register!(scenario)
-      # TODO: Probably want to check whether it already exists.
-      @@scenarios[scenario.name] = scenario
-    end
-
-    def self.by_name(name)
-      @@scenarios[name]
     end
   end
 end
