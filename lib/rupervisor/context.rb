@@ -26,7 +26,7 @@ module Rupervisor
       if next_action
         run!(next_action, action, result)
       else
-        puts "Done after #{action}"
+        puts "Done after #{action} with #{result}"
       end
     end
 

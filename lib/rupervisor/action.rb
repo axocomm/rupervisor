@@ -27,8 +27,38 @@ module Rupervisor
     end
 
     class Retry < Action
-      def call(ctx)
-        puts 'Would retry'
+      def initialize(attempts = 1)
+        @max_attempts = attempts
+        @attempt = 1
+        @action = nil
+        @result = nil
+        @on_failure = nil  # TODO: Maybe a .then with another action?
+      end
+
+      def then(action)
+        @on_failure = action
+        self
+      end
+
+      # NB: This mutates @action and @result to preserve the original
+      # action (should be a RunScenario) that triggered it.
+      def call(ctx, last_action, last_result)
+        @action ||= last_action
+        @result ||= last_result
+
+        puts "In retry, looking for #{@result} and got #{last_result}"
+        result, next_action = @action.call(ctx, @action, last_result)
+        if result != @result
+          puts 'Result changed; done retrying'
+          [result, next_action]
+        elsif @attempt <= @max_attempts
+          puts 'Retrying'
+          @attempt += 1
+          [result, self]
+        else
+          puts 'Retries exhausted'
+          [result, @on_failure]
+        end
       end
     end
 
@@ -37,7 +67,7 @@ module Rupervisor
         @name = name
       end
 
-      def call(ctx, *)
+      def call(ctx, last_action, last_result)
         s = ctx.scenarios[@name]
         raise ScenarioUndefined, "Scenario #{@name} not defined" if s.nil?
 

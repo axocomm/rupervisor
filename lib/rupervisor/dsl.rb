@@ -51,6 +51,8 @@ module Rupervisor
       Context.instance.run!(Actions::RunScenario.new(:init))
     end
 
+    # Top-level DSL functions for triggering actions
+
     def run(name)
       Actions::RunScenario.new(name)
     end
@@ -59,8 +61,8 @@ module Rupervisor
       Actions::Exit.new
     end
 
-    def try_again
-      Actions::Retry.new
+    def try_again(times = 1)
+      Actions::Retry.new(times)
     end
   end
 end
