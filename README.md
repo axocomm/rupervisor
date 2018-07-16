@@ -8,59 +8,91 @@ development and might have some strange behavior.
 ## How it Works
 
 Configuration is done inside a `Ruperfile` using Ruby and a small
-"DSL" for defining scenarios and outcomes. For example,
+"DSL" for defining scenarios and outcomes. As a contrived example,
 
 ``` ruby
-API_DOWN = 2
+API_DOWN = 5
+HOST_UNREACHABLE = 6
 
 def log_file(suffix = '')
-  '/tmp/foo#{suffix}.log'
+  "/tmp/testlog#{suffix}.log"
 end
 
-COMMAND = './tmp/foo -s %<seq_start>d %<wait_api>s > %<log_file>s 2>&1'
+def next_seq_start
+  # ...
+end
 
-attempt = 1
+commands = {
+  init: './tmp/foo -s %<seq_start>d > %<log_file>s 2>&1',
+  check_api: "curl https://foo.com/api | head -1 | grep -qs '200 OK'"
+}
 
 Scenario.new(:init) do |s|
-  args = {
-    :seq_start => 1,
-    :log_file  => log_file
-  }
+  args = { seq_start: next_seq_start, log_file: log_file }
 
-  s.runs(COMMAND).with(args)
+  s.runs(commands[s.name]).with(args)
   s
-    .on(0, just_exit)
-    .on(1, just_exit)
-    .on(API_DOWN, :run_again)
+    .on(0, run(:process_results))
+    .on(API_DOWN, run(:check_api))
+    .otherwise(just_exit)
 end
 
-Scenario.new(:run_again) do |s|
-  attempt += 1
-
-  args = {
-    :seq_start => next_seq_start,
-    :log_file  => log_file(attempt),
-    :wait_api  => '-w'
-  }
-
-  s.runs(COMMAND).with(args)
+Scenario.new(:check_api) do |s|
+  s.runs(commands[s.name])
   s
-    .on(0, just_exit)
-    .on(1, just_exit)
-    .on(API_DOWN, :run_again)
+    .on(0, run(:init))
+    .on(HOST_UNREACHABLE, just_exit.with(1))
+    .otherwise(try_again(5).then(just_exit))
 end
+
+Scenario.new(:process_results) do |s|
+  args = { ... }
+  s.runs(...).with(args)
+  s
+    .on(0, run(:generate_report))
+    .otherwise(just_exit)
+end
+
+# Scenario.new(:generate_report) ...
 
 begin!
 ```
 
-This file (maybe not the best example yet) defines `Scenario`s named
-`:init` and `:run_again`. A `Scenario` simply contains a command, some
-options/arguments, and a number of handlers that are executed
-depending on the command's exit code. `begin!` triggers the `Context`
-to begin execution of a starting `Scenario` (by default `:init`). When
-the command exits, the action specified in the `.on` call will be run,
-whether it be just exiting (`just_exit`) or attempting another
-action (Ruby block, `Scenario`, exiting, retrying).
+This file defines a few `Scenario`s, i.e. pipeline steps (the
+nomenclature might need some work) that interact as follows:
+
+**`:init`**
+
+`:init` runs a command with some arguments. When the program exits,
+one of the following occurs depending on the exit code:
+
+- If it is 0, `:process_results` is run.
+- If the theoretical script returns `API_DOWN`, indicating
+  short-term downtime of some kind, `:check_api` is run.
+- Otherwise, the pipeline exits with the original return code.
+
+**`:check_api`**
+
+`:check_api` checks the response code of the API using `curl` and
+waits for a 200.
+
+- If the command succeeds, `:init` is run again.
+- If the host is unreachable, the pipeline exits with an exit code of
+  1.
+- Otherwise, this step is tried again 5 times before just exiting.
+
+**`:process_results`**
+
+As a final step, `:process_results` does some imaginary processing and
+either runs another `Scenario` or exits.
+
+A `Scenario` simply contains a command, some options/arguments, and a
+number of handlers that are executed depending on the command's exit
+code. `begin!` triggers the `Context` to start execution of an initial
+`Scenario` (by default `:init`). When the command exits, the action
+specified in the `.on` call will be run, whether it be just exiting
+(`just_exit`), attempting another action (`run`), or retrying
+(`try_again`) (more might be added soon).
 
 As this is simply Ruby, blocks in the `Scenario` definition may be
 used to dynamically populate arguments (e.g. determining where to
