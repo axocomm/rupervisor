@@ -153,3 +153,4 @@ the need to constantly check up on them.
   just a friendlier DSL method for `require_relative`)
 - Ability to pipe stderr or stdout to actions?
 - Addressing code style concerns
+- Cleanup/atexit actions

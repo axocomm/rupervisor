@@ -4,8 +4,6 @@ require 'rupervisor/dsl'
 # library?
 module Rupervisor
   class Ruperfile
-    DEFAULT_PATH = File.join(Dir.pwd, 'Dupfile')
-
     attr_reader :path
 
     def initialize(path = DEFAULT_PATH)
@@ -32,6 +30,10 @@ module Rupervisor
 
     def basename
       File.basename(@path)
+    end
+
+    def self.default_path
+      File.join(Dir.pwd, 'Ruperfile')
     end
   end
 end
