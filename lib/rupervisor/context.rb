@@ -1,8 +1,6 @@
 require 'open3'
 require 'singleton'
 
-require 'rupervisor/dsl'
-
 module Rupervisor
   class Context
     include Singleton
@@ -28,10 +26,6 @@ module Rupervisor
       else
         puts "Done after #{action} with #{result}"
       end
-    end
-
-    def run_file!(ruperfile)
-      DSL.evaluate(ruperfile.content)
     end
   end
 end

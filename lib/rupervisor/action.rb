@@ -1,5 +1,7 @@
 require 'open3'
 
+require 'rupervisor/errors'
+
 module Rupervisor
   class Action
     def call(_ctx, _last_action, _last_result)
@@ -85,12 +87,6 @@ module Rupervisor
         raise ActionUndefined, "No action defined for #{rv}" if next_action.nil?
         [rv, next_action]
       end
-
-      class ScenarioUndefined < StandardError
-      end
-    end
-
-    class ActionUndefined < StandardError
     end
   end
 end

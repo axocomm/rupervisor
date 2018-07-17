@@ -1,4 +1,4 @@
-require 'rupervisor/context'
+require 'rupervisor/dsl'
 
 # TODO: Maybe make some components of this a common DSL-generating
 # library?
@@ -22,12 +22,16 @@ module Rupervisor
 
     def run!(mode = :run)
       begin
-        # Context.new(self, mode).run!
-        Context.instance.run_file!(self)
-      # TODO: Ensure actual handling of different exceptions.
-      rescue Exception => e
+        DSL.evaluate(content)
+      rescue RuperfileError => e
+        puts "!!! There was a problem in #{basename}: #{e}"
+      rescue StandardError => e
         raise
       end
+    end
+
+    def basename
+      File.basename(@path)
     end
   end
 end
