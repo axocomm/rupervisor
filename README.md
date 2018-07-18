@@ -5,100 +5,6 @@ actions based on their return values, and enables the definition of
 simple pipelines for anything. Be aware this is still in very early
 development and might have some strange behavior.
 
-## How it Works
-
-Configuration is done inside a `Ruperfile` using Ruby and a small
-"DSL" for defining scenarios and outcomes. As a contrived example,
-
-``` ruby
-API_DOWN = 5
-HOST_UNREACHABLE = 6
-
-def log_file(suffix = '')
-  "/tmp/testlog#{suffix}.log"
-end
-
-def next_seq_start
-  # ...
-end
-
-commands = {
-  init: './tmp/foo -s %<seq_start>d > %<log_file>s 2>&1',
-  check_api: "curl https://foo.com/api | head -1 | grep -qs '200 OK'"
-}
-
-Scenario.new(:init) do |s|
-  args = { seq_start: next_seq_start, log_file: log_file }
-
-  s.runs(commands[s.name]).with(args)
-  s
-    .on(0, run(:process_results))
-    .on(API_DOWN, run(:check_api))
-    .otherwise(just_exit)
-end
-
-Scenario.new(:check_api) do |s|
-  s.runs(commands[s.name])
-  s
-    .on(0, run(:init))
-    .on(HOST_UNREACHABLE, just_exit.with(1))
-    .otherwise(try_again(5).then(just_exit))
-end
-
-Scenario.new(:process_results) do |s|
-  args = { ... }
-  s.runs(...).with(args)
-  s
-    .on(0, run(:generate_report))
-    .otherwise(just_exit)
-end
-
-# Scenario.new(:generate_report) ...
-
-begin!
-```
-
-This file defines a few `Scenario`s, i.e. pipeline steps (the
-nomenclature might need some work) that interact as follows:
-
-**`:init`**
-
-`:init` runs a command with some arguments. When the program exits,
-one of the following occurs depending on the exit code:
-
-- If it is 0, `:process_results` is run.
-- If the theoretical script returns `API_DOWN`, indicating
-  short-term downtime of some kind, `:check_api` is run.
-- Otherwise, the pipeline exits with the original return code.
-
-**`:check_api`**
-
-`:check_api` checks the response code of the API using `curl` and
-waits for a 200.
-
-- If the command succeeds, `:init` is run again.
-- If the host is unreachable, the pipeline exits with an exit code of
-  1.
-- Otherwise, this step is tried again 5 times before just exiting.
-
-**`:process_results`**
-
-As a final step, `:process_results` does some imaginary processing and
-either runs another `Scenario` or exits.
-
-A `Scenario` simply contains a command, some options/arguments, and a
-number of handlers that are executed depending on the command's exit
-code. `begin!` triggers the `Context` to start execution of an initial
-`Scenario` (by default `:init`). When the command exits, the action
-specified in the `.on` call will be run, whether it be just exiting
-(`just_exit`), attempting another action (`run`), or retrying
-(`try_again`) (more might be added soon).
-
-As this is simply Ruby, blocks in the `Scenario` definition may be
-used to dynamically populate arguments (e.g. determining where to
-start from next), more finely control retry counts, implement simple
-alerting and monitoring, etc.
-
 ## Requirements
 
 - Ruby 1.9.3+
@@ -121,6 +27,104 @@ gem 'rupervisor', github: 'axocomm/rupervisor'
 
 ## Usage
 
+### `Ruperfile` DSL
+
+Configuration is done inside a `Ruperfile` using Ruby and a small
+"DSL" for defining scenarios and outcomes using functions and chained
+methods that read vaguely like sentences.
+
+#### `Scenario`
+
+Steps are implemented using the `Scenario` class. Its constructor
+takes the name of the step and a block defining its properties, to
+which it yields itself. Commands to run and actions to take are
+defined inside this block by using several DSL methods and functions:
+
+- `.runs(command)`
+
+    Sets the command (or command format string) that will be run
+
+- `.with(params)`
+
+    Accepts a Hash of parameters that will be formatted into the
+    command
+
+- `.on(code, action)`
+
+    Registers a handler for an execution outcome
+
+    This accepts one of the following:
+
+    - An integer registers the handler for a single exit code
+    - An array of integers registers the handler for several exit
+      codes
+    - The symbol `:any` registers the handler for all codes (identical
+      to `.otherwise`)
+
+- `.otherwise(action)`
+
+    Registers a default handler to execute if one is not registered
+    for the exit code
+
+Each of these methods returns the `Scenario` instance, so they are
+encouraged to be chained.
+
+#### Actions
+
+When a step's command exits, the return code is checked and one of a
+number of actions may be taken, specified by the use of a few helper
+functions:
+
+- `run(name)`
+
+    Runs another `Scenario` by name
+
+- `just_exit`
+
+    Returns an `Exit` action that exits the program. By default, this
+    will use the exit code of the command but may be overridden using
+    `Exit.with`, e.g. `just_exit.with(1)`.
+
+- `try_again([times = 1])`
+
+    Retries the current scenario a specified number of times
+
+    By default, when all retries are exhausted the program will just
+    exit normally. However, by calling `.then(action)`, and
+    alternative may be provided (e.g. running another scenario,
+    exiting with a specific code, etc.).
+
+#### Example
+
+``` ruby
+Scenario.new(:init) do |s|
+  s.runs('./hello %<name>s').with(name: 'Foo')
+   .on(0, run(:another_step))
+   .otherwise(try_again(1).then(just_exit.with(1)))
+end
+
+Scenario.new(:another_step) do |s|
+  s.runs('./goodbye')
+   .on(:any, just_exit)
+end
+
+begin!
+```
+
+This simplistic example registers a new `Scenario` called `:init`
+which runs the command `'./hello %<name>s' % { name:
+Shellwords.escape('Foo') }`. If the command returns 0, the pipeline
+proceeds to another step. Otherwise, it tries again once before just
+exiting with 1.
+
+Finally, `begin!` serves to trigger the first scenario and accepts an
+optional symbol for specifying the entry point.
+
+As this is simply Ruby, blocks in the `Scenario` definition may be
+used to dynamically populate arguments (e.g. determining where to
+start from next), more finely control retry counts, implement simple
+alerting and monitoring, etc.
+
 ### Running a file
 
 After specifying your scenarios as above, simply run `rup run`. This
@@ -139,31 +143,34 @@ return code handlers and commands), e.g.
 
 ``` yaml
 ---
-path: Ruperfile
+path: simple.ruper
 context:
   scenarios:
     init:
       name: init
-      command: "./tmp/foo -s %<seq_start>d > %<log_file>s 2>&1"
+      command: "./hello %<name>s"
       params:
-        seq_start: 0
-        log_file: "/tmp/testlog.log"
+        name: Foo
+      runnable_command: "./hello Foo"
       actions:
         '0':
           type: RunScenario
-          scenario: process_results
-        '5':
-          type: RunScenario
-          scenario: check_api
+          scenario: another_step
+        default:
+          type: Retry
+          max_attempts: 1
+          on_failure:
+            type: Exit
+            rv: 1
+    another_step:
+      name: another_step
+      command: "./goodbye"
+      params: {}
+      runnable_command: "./goodbye"
+      actions:
         default:
           type: Exit
           rv:
-    check_api:
-      name: check_api
-      command: curl https://foo.com/api | head -1 | grep -qs '200 OK'
-      params: {}
-      actions:
-        # ...
 ```
 
 whereas using `simple` will display a much simpler outline just
@@ -171,15 +178,9 @@ containing scenarios and actions on return code:
 
 ```
 Scenario[init]
-  0: RunScenario[name=process_results]
-  5: RunScenario[name=check_api]
-  default: Exit[rv=]
-Scenario[check_api]
-  0: RunScenario[name=init]
-  6: Exit[rv=1]
-  default: Retry[max_attempts=5,on_failure=Exit[rv=]]
-Scenario[process_results]
-  0: RunScenario[name=generate_report]
+  0: RunScenario[name=another_step]
+  default: Retry[max_attempts=1,on_failure=Exit[rv=1]]
+Scenario[another_step]
   default: Exit[rv=]
 ```
 
@@ -207,6 +208,8 @@ the need to constantly check up on them.
 - Ability to dump evaluated `Ruperfile` to some easily-readable format
 - Ability to define scenarios elsewhere and include them (even if it's
   just a friendlier DSL method for `require_relative`)
-- Ability to pipe stderr or stdout to actions?
+- Ability to pipe stderr or stdout to actions
 - Addressing code style concerns
 - Cleanup/atexit actions
+- Lazy evaluation for computing things during actual scenario
+  execution
