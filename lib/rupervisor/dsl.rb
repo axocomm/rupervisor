@@ -4,8 +4,12 @@ require 'rupervisor/scenario'
 
 module Rupervisor
   class DSL
-    def self.evaluate(content)
-      self.new.instance_eval { eval(content) }
+    def initialize(mode)
+      @mode = mode
+    end
+
+    def self.evaluate(content, mode)
+      self.new(mode).instance_eval { eval(content) }
     end
 
     ##################
@@ -47,8 +51,8 @@ module Rupervisor
       end
     end
 
-    def begin!
-      Context.instance.run!(Actions::RunScenario.new(:init))
+    def begin!(init = :init)
+      Context.instance.run!(run(init)) if @mode == :run
     end
 
     # Top-level DSL functions for triggering actions

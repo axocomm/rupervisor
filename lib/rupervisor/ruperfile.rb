@@ -14,13 +14,20 @@ module Rupervisor
       File.open(@path) { |fh| fh.read }
     end
 
-    def dump
-      run! :dump
+    def dump(params = {})
+      run!(mode: :simulate)
+      if params[:format] == :json
+        puts Context.instance.to_json
+      else
+        Context.instance.dump
+      end
     end
 
-    def run!(mode = :run)
+    def run!(params = {})
+      mode = params[:mode] || :run
+
       begin
-        DSL.evaluate(content)
+        DSL.evaluate(content, mode)
       rescue RuperfileError => e
         puts "!!! There was a problem in #{basename}: #{e}"
       rescue StandardError => e

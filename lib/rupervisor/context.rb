@@ -28,6 +28,11 @@ module Rupervisor
       end
     end
 
+    # Dump registered scenarios.
+    def dump
+      @scenarios.values.each(&:dump)
+    end
+
     def to_h
       { scenarios: @scenarios }
     end
