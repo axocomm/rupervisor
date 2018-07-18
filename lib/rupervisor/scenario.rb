@@ -21,6 +21,7 @@ module Rupervisor
       @actions.each do |(code, action)|
         puts "  #{code}: #{action.to_s}"
       end
+      puts "  default: #{@default_action.to_s}" unless @default_action.nil?
     end
 
     def to_s
@@ -32,7 +33,7 @@ module Rupervisor
         :name    => @name,
         :command => @command,
         :params  => @params,
-        :actions => @actions
+        :actions => @actions.merge(default: @default_action)
       }
     end
 
