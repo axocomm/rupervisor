@@ -119,11 +119,69 @@ Simply add the following to your `Gemfile`:
 gem 'rupervisor', github: 'axocomm/rupervisor'
 ```
 
-## Running
+## Usage
+
+### Running a file
 
 After specifying your scenarios as above, simply run `rup run`. This
 will execute `Ruperfile` by default, but a different path or filename
 may be provided as a positional argument.
+
+### Inspecting a file
+
+To see how the program will interpret the `Ruperfile` definition, the
+`rup inspect` command may be run. This command accepts an optional
+`--format, -f FORMAT` option accepting `json`, `yaml`, or `simple`
+(default).
+
+JSON and YAML output includes all `Scenario`s (along with registered
+return code handlers and commands), e.g.
+
+``` yaml
+---
+path: Ruperfile
+context:
+  scenarios:
+    init:
+      name: init
+      command: "./tmp/foo -s %<seq_start>d > %<log_file>s 2>&1"
+      params:
+        seq_start: 0
+        log_file: "/tmp/testlog.log"
+      actions:
+        '0':
+          type: RunScenario
+          scenario: process_results
+        '5':
+          type: RunScenario
+          scenario: check_api
+        default:
+          type: Exit
+          rv:
+    check_api:
+      name: check_api
+      command: curl https://foo.com/api | head -1 | grep -qs '200 OK'
+      params: {}
+      actions:
+        # ...
+```
+
+whereas using `simple` will display a much simpler outline just
+containing scenarios and actions on return code:
+
+```
+Scenario[init]
+  0: RunScenario[name=process_results]
+  5: RunScenario[name=check_api]
+  default: Exit[rv=]
+Scenario[check_api]
+  0: RunScenario[name=init]
+  6: Exit[rv=1]
+  default: Retry[max_attempts=5,on_failure=Exit[rv=]]
+Scenario[process_results]
+  0: RunScenario[name=generate_report]
+  default: Exit[rv=]
+```
 
 ## Why?
 
@@ -146,8 +204,6 @@ the need to constantly check up on them.
     - Ability to pass blocks as handlers
     - Renaming `Scenario` to something more appropriate?
 - Actual error handling
-- Updates to internal structure (e.g. generating a digraph of actions
-  connected by outcomes?)
 - Ability to dump evaluated `Ruperfile` to some easily-readable format
 - Ability to define scenarios elsewhere and include them (even if it's
   just a friendlier DSL method for `require_relative`)
