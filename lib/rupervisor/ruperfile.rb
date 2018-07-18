@@ -1,3 +1,6 @@
+require 'json'
+require 'yaml'
+
 require 'rupervisor/dsl'
 
 # TODO: Maybe make some components of this a common DSL-generating
@@ -16,8 +19,13 @@ module Rupervisor
 
     def dump(params = {})
       run!(mode: :simulate)
-      if params[:format] == :json
-        puts Context.instance.to_json
+
+      dump_mode = params[:mode] || :simple
+      case dump_mode
+      when :json
+        puts to_json
+      when :yaml
+        puts to_yaml
       else
         Context.instance.dump
       end
@@ -37,6 +45,18 @@ module Rupervisor
 
     def basename
       File.basename(@path)
+    end
+
+    def to_h
+      { path: @path, context: Context.instance }
+    end
+
+    def to_json(*)
+      to_h.to_json
+    end
+
+    def to_yaml(*)
+      JSON.parse(to_json).to_yaml
     end
 
     def self.default_path

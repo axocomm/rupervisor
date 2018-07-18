@@ -18,11 +18,10 @@ module Rupervisor
       Ruperfile.new(ruperfile).run!
     end
 
-    option :json, type: :boolean, aliases: [:j]
+    option :format, type: :string, default: :simple, aliases: [:f]
     desc 'inspect RUPERFILE', 'Dump contents of RUPERFILE'
     def inspect_rup(ruperfile = Ruperfile.default_path)
-      format = options[:json] ? :json : :simple
-      Ruperfile.new(ruperfile).dump(format: format)
+      Ruperfile.new(ruperfile).dump(mode: options[:format].to_sym)
     end
   end
 end
