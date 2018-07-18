@@ -1,4 +1,5 @@
 require 'json'
+require 'shellwords'
 
 module Rupervisor
   class Scenario
@@ -11,9 +12,8 @@ module Rupervisor
       @default_action = nil
     end
 
-    # TODO: Clean command
     def prepared_command
-      @command % @params
+      @command % Hash[@params.map { |(k, v)| [k, Shellwords.escape(v)] }]
     end
 
     def dump(mode = :simple)
@@ -30,10 +30,11 @@ module Rupervisor
 
     def to_h
       {
-        :name    => @name,
-        :command => @command,
-        :params  => @params,
-        :actions => @actions.merge(default: @default_action)
+        :name             => @name,
+        :command          => @command,
+        :params           => @params,
+        :runnable_command => prepared_command,
+        :actions          => @actions.merge(default: @default_action)
       }
     end
 

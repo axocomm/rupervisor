@@ -36,7 +36,7 @@ module Rupervisor
 
       def call(_ctx, _last_action, last_result)
         rv = @rv.nil? ? last_result : @rv
-        Proc.new { exit rv }.call
+        proc { exit rv }.call
       end
 
       def to_s
