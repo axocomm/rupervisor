@@ -1,5 +1,6 @@
 require 'rupervisor/action'
 require 'rupervisor/context'
+require 'rupervisor/errors'
 require 'rupervisor/scenario'
 
 module Rupervisor
@@ -34,8 +35,17 @@ module Rupervisor
         self
       end
 
-      def on(code, action)
-        @actions[code] = action
+      def on(rv, action)
+        if rv.is_a?(Array)
+          rv.each { |code| @actions[code] = action }
+        elsif rv == :any
+          @default_action = action
+        elsif rv.is_a?(Integer)
+          @actions[rv] = action
+        else
+          raise Rupervisor::RuperfileError, "Unsupported return value #{rv}"
+        end
+
         self
       end
 
