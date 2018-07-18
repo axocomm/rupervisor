@@ -127,14 +127,14 @@ alerting and monitoring, etc.
 
 ### Running a file
 
-After specifying your scenarios as above, simply run `rup run`. This
+After specifying your scenarios as above, simply run `rp run`. This
 will execute `Ruperfile` by default, but a different path or filename
 may be provided as a positional argument.
 
 ### Inspecting a file
 
 To see how the program will interpret the `Ruperfile` definition, the
-`rup inspect` command may be run. This command accepts an optional
+`rp inspect` command may be run. This command accepts an optional
 `--format, -f FORMAT` option accepting `json`, `yaml`, or `simple`
 (default).
 

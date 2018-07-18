@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'rupervisor'
   s.version     = '0.1'
-  s.executables << 'rup'
+  s.executables << 'rp'
   s.date        = '2018-07-14'
   s.summary     = 'Runs things'
   s.description = "If at first you don't succeed, you're probably doomed"
