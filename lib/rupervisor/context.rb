@@ -27,5 +27,13 @@ module Rupervisor
         puts "Done after #{action} with #{result}"
       end
     end
+
+    def to_h
+      { scenarios: @scenarios }
+    end
+
+    def to_json(*)
+      to_h.to_json
+    end
   end
 end

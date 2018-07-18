@@ -7,6 +7,18 @@ module Rupervisor
     def call(_ctx, _last_action, _last_result)
       raise NotImplementedError
     end
+
+    def to_s
+      'Action[]'
+    end
+
+    def to_h
+      raise NotImplementedError
+    end
+
+    def to_json(*)
+      to_h.to_json
+    end
   end
 
   module Actions
@@ -25,6 +37,14 @@ module Rupervisor
       def call(_ctx, _last_action, last_result)
         rv = @rv.nil? ? last_result : @rv
         Proc.new { exit rv }.call
+      end
+
+      def to_s
+        "Exit[rv=#{@rv}]"
+      end
+
+      def to_h
+        { type: 'Exit', rv: @rv }
       end
     end
 
@@ -62,6 +82,18 @@ module Rupervisor
           [result, @on_failure]
         end
       end
+
+      def to_s
+        "Retry[max_attempts=#{@max_attempts},on_failure=#{@on_failure}]"
+      end
+
+      def to_h
+        {
+          type: 'Retry',
+          max_attempts: @max_attempts,
+          on_failure: @on_failure
+        }
+      end
     end
 
     class RunScenario < Action
@@ -86,6 +118,17 @@ module Rupervisor
         next_action = s.actions[rv] || s.default_action
         raise ActionUndefined, "No action defined for #{rv}" if next_action.nil?
         [rv, next_action]
+      end
+
+      def to_s
+        "RunScenario[name=#{@name}]"
+      end
+
+      def to_h
+        {
+          type: 'RunScenario',
+          scenario: @name
+        }
       end
     end
   end
