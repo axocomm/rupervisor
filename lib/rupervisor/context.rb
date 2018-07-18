@@ -1,8 +1,6 @@
 require 'open3'
 require 'singleton'
 
-require 'rupervisor/dsl'
-
 module Rupervisor
   class Context
     include Singleton
@@ -30,8 +28,17 @@ module Rupervisor
       end
     end
 
-    def run_file!(ruperfile)
-      DSL.evaluate(ruperfile.content)
+    # Dump registered scenarios.
+    def dump
+      @scenarios.values.each(&:dump)
+    end
+
+    def to_h
+      { scenarios: @scenarios }
+    end
+
+    def to_json(*)
+      to_h.to_json
     end
   end
 end

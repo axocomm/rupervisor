@@ -1,9 +1,23 @@
 require 'open3'
 
+require 'rupervisor/errors'
+
 module Rupervisor
   class Action
     def call(_ctx, _last_action, _last_result)
       raise NotImplementedError
+    end
+
+    def to_s
+      'Action[]'
+    end
+
+    def to_h
+      raise NotImplementedError
+    end
+
+    def to_json(*)
+      to_h.to_json
     end
   end
 
@@ -23,6 +37,14 @@ module Rupervisor
       def call(_ctx, _last_action, last_result)
         rv = @rv.nil? ? last_result : @rv
         Proc.new { exit rv }.call
+      end
+
+      def to_s
+        "Exit[rv=#{@rv}]"
+      end
+
+      def to_h
+        { type: 'Exit', rv: @rv }
       end
     end
 
@@ -60,6 +82,18 @@ module Rupervisor
           [result, @on_failure]
         end
       end
+
+      def to_s
+        "Retry[max_attempts=#{@max_attempts},on_failure=#{@on_failure}]"
+      end
+
+      def to_h
+        {
+          type: 'Retry',
+          max_attempts: @max_attempts,
+          on_failure: @on_failure
+        }
+      end
     end
 
     class RunScenario < Action
@@ -86,11 +120,16 @@ module Rupervisor
         [rv, next_action]
       end
 
-      class ScenarioUndefined < StandardError
+      def to_s
+        "RunScenario[name=#{@name}]"
       end
-    end
 
-    class ActionUndefined < StandardError
+      def to_h
+        {
+          type: 'RunScenario',
+          scenario: @name
+        }
+      end
     end
   end
 end

@@ -16,16 +16,27 @@ module Rupervisor
       @command % @params
     end
 
+    def dump(mode = :simple)
+      puts to_s
+      @actions.each do |(code, action)|
+        puts "  #{code}: #{action.to_s}"
+      end
+    end
+
+    def to_s
+      "Scenario[#{@name}]"
+    end
+
     def to_h
       {
-        :name     => @name,
-        :command  => @command,
-        :params   => @params,
-        :outcomes => @actions
+        :name    => @name,
+        :command => @command,
+        :params  => @params,
+        :actions => @actions
       }
     end
 
-    def to_json
+    def to_json(*)
       to_h.to_json
     end
   end
