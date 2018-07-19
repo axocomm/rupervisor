@@ -4,21 +4,36 @@ require 'rupervisor/errors'
 require 'rupervisor/scenario'
 
 module Rupervisor
+  # A class primarily for handling evaluation of the Ruperfile and
+  # exposing main DSL components.
+  #
+  # When #evaluate is called, a new instance of DSL is created with a
+  # flag effectively enabling or disabling the operation of begin!
+  # (which is probably unnecessary). In the context of this instance,
+  # the DSL-specific Scenario class and helper methods are made
+  # available and serve as the specification of the language itself.
   class DSL
     def initialize(mode)
       @mode = mode
     end
 
     def self.evaluate(content, mode)
-      self.new(mode).instance_eval { eval(content) }
+      new(mode).instance_eval { eval(content) }
     end
 
     ##################
     # DSL Components #
     ##################
 
+    # A DSL-specific subclass of Rupervisor::Scenario.
+    #
+    # This version of the Scenario class is what is exposed in the
+    # Ruperfile and provides a "friendlier" interface to Scenario
+    # definition, e.g. the chained methods for setting commands and
+    # arguments and a &block parameter in the constructor for setting
+    # those properties more declaratively.
     class Scenario < Rupervisor::Scenario
-      def initialize(name, &block)
+      def initialize(name)
         super(name)
         yield self
         register!
