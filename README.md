@@ -94,6 +94,16 @@ functions:
     alternative may be provided (e.g. running another scenario,
     exiting with a specific code, etc.).
 
+- `call(&block)`
+
+    Executes a Ruby block
+
+    If the block takes arguments, they may be provided with `.with`,
+    e.g. `call { |x| puts "Called with #{x}" }.with(42)`.
+
+    Soon I would like to make command execution results (exit code,
+    stdout, stderr) to these blocks for custom error handling, etc.
+
 #### Example
 
 ``` ruby
@@ -197,20 +207,16 @@ the need to constantly check up on them.
 
 - Logging
 - DSL improvements, including
-    - Setting a single action for multiple exit codes
     - Setting actions based on output content as well?
     - Better syntax for running subsequent `Scenario`s
     - Ability to pass arguments and/or provide rules for generating
       them on subsequent runs
-    - Ability to pass blocks as handlers
-      - Also binding of output and exit code for custom exit handlers?
+    - Binding of output and exit code for Block Actions?
     - Renaming `Scenario` to something more appropriate?
 - Actual error handling
-- Ability to dump evaluated `Ruperfile` to some easily-readable format
 - Ability to define scenarios elsewhere and include them (even if it's
   just a friendlier DSL method for `require_relative`)
 - Ability to pipe stderr or stdout to actions
-- Addressing code style concerns
 - Cleanup/atexit actions
 - Lazy evaluation for computing things during actual scenario
   execution
