@@ -6,6 +6,10 @@ require 'rupervisor/dsl'
 # TODO: Maybe make some components of this a common DSL-generating
 # library?
 module Rupervisor
+  # The Ruperfile class.
+  #
+  # This class just serves as a reference to the current Ruperfile and
+  # facilitates inspection and evaluation of its contents.
   class Ruperfile
     attr_reader :path
 
@@ -14,7 +18,7 @@ module Rupervisor
     end
 
     def content
-      File.open(@path) { |fh| fh.read }
+      File.open(@path, &:read)
     end
 
     def dump(params = {})
@@ -38,7 +42,7 @@ module Rupervisor
         DSL.evaluate(content, mode)
       rescue RuperfileError => e
         puts "!!! There was a problem in #{basename}: #{e}"
-      rescue StandardError => e
+      rescue StandardError
         raise
       end
     end

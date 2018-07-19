@@ -2,6 +2,10 @@ require 'open3'
 require 'singleton'
 
 module Rupervisor
+  # The Context class.
+  #
+  # This class is a singleton that primarily handles registration and
+  # execution of Ruperfile Scenarios.
   class Context
     include Singleton
 

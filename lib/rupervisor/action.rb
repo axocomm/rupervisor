@@ -3,6 +3,10 @@ require 'open3'
 require 'rupervisor/errors'
 
 module Rupervisor
+  # A base class for Rupervisor actions.
+  #
+  # Implementation must at a minimum include #call, which will
+  # actually execute each action while running the Ruperfile.
   class Action
     def call(_ctx, _last_action, _last_result)
       raise NotImplementedError
@@ -24,16 +28,19 @@ module Rupervisor
   # TODO: Should these have analogues in the DSL class as well? Or is
   # that a stupid idea in general?
   module Actions
+    # An Action that allows execution of a Block at runtime.
     class Block < Action
       attr_accessor :args
 
       def initialize(&block)
-        @block = block
+        @proc = proc(&block)
         @args = []
       end
 
-      def call(ctx, last_action, last_result)
-        proc(&@block).call(*@args)
+      # TODO: Should at least last_result be injected automatically,
+      # or perhaps with a special case of .with?
+      def call(_ctx, _last_action, _last_result)
+        @proc.call(*@args)
       end
 
       def with(*args)
@@ -50,6 +57,7 @@ module Rupervisor
       end
     end
 
+    # An Action triggering the job to exit.
     class Exit < Action
       attr_accessor :rv
 
@@ -62,7 +70,7 @@ module Rupervisor
         self
       end
 
-      def call(ctx, last_action, last_result)
+      def call(_ctx, _last_action, last_result)
         proc { |rv| exit rv }.call(@rv.nil? ? last_result : @rv)
       end
 
@@ -75,13 +83,18 @@ module Rupervisor
       end
     end
 
+    # An Action facilitating retries of another action.
+    #
+    # The #call method of Retry will repeatedly execute the action
+    # that requested it until the number of attempts has been exceeded
+    # or the result changes.
     class Retry < Action
       def initialize(attempts = 1)
         @max_attempts = attempts
         @attempt = 1
         @action = nil
         @result = nil
-        @on_failure = nil  # TODO: Maybe a .then with another action?
+        @on_failure = nil
       end
 
       def then(action)
@@ -95,6 +108,11 @@ module Rupervisor
         @action ||= last_action
         @result ||= last_result
 
+        retry_action!(ctx, last_action, last_result)
+      end
+
+      # TODO: Is there any need to check that last_action == @action?
+      def retry_action!(ctx, _last_action, last_result)
         puts "In retry, looking for #{@result} and got #{last_result}"
         result, next_action = @action.call(ctx, @action, last_result)
         if result != @result
@@ -123,12 +141,15 @@ module Rupervisor
       end
     end
 
+    # An Action that executes the command registered in a Scenario.
     class RunScenario < Action
       def initialize(name)
         @name = name
       end
 
-      def call(ctx, last_action, last_result)
+      # TODO: last_result used for passing around stdin/stdout/stderr
+      # as well?
+      def call(ctx, _last_action, _last_result)
         s = ctx.scenarios[@name]
         raise ScenarioUndefined, "Scenario #{@name} not defined" if s.nil?
 

@@ -2,6 +2,14 @@ require 'json'
 require 'shellwords'
 
 module Rupervisor
+  # The Scenario class.
+  #
+  # A Scenario is the basic unit of work in a Ruperfile and is
+  # primarily used for executing commands.
+  #
+  # Each Scenario should have at least a name and command. These and
+  # other properties are set using the DSL-specific subclass that
+  # provides some sentence-like chainable methods.
   class Scenario
     attr_reader :name, :command, :params, :actions, :default_action
 
@@ -16,12 +24,12 @@ module Rupervisor
       @command % Hash[@params.map { |(k, v)| [k, Shellwords.escape(v)] }]
     end
 
-    def dump(mode = :simple)
+    def dump
       puts to_s
       @actions.each do |(code, action)|
-        puts "  #{code}: #{action.to_s}"
+        puts "  #{code}: #{action}"
       end
-      puts "  default: #{@default_action.to_s}" unless @default_action.nil?
+      puts "  default: #{@default_action}" unless @default_action.nil?
     end
 
     def to_s
@@ -30,11 +38,11 @@ module Rupervisor
 
     def to_h
       {
-        :name             => @name,
-        :command          => @command,
-        :params           => @params,
-        :runnable_command => prepared_command,
-        :actions          => @actions.merge(default: @default_action)
+        name: @name,
+        command: @command,
+        params: @params,
+        runnable_command: prepared_command,
+        actions: @actions.merge(default: @default_action)
       }
     end
 
