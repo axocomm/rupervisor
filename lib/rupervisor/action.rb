@@ -33,14 +33,14 @@ module Rupervisor
       attr_accessor :args
 
       def initialize(&block)
-        @block = block
+        @proc = proc(&block)
         @args = []
       end
 
       # TODO: Should at least last_result be injected automatically,
       # or perhaps with a special case of .with?
       def call(_ctx, _last_action, _last_result)
-        proc(&@block).call(*@args)
+        @proc.call(*@args)
       end
 
       def with(*args)
