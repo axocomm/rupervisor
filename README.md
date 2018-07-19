@@ -203,6 +203,7 @@ the need to constantly check up on them.
     - Ability to pass arguments and/or provide rules for generating
       them on subsequent runs
     - Ability to pass blocks as handlers
+      - Also binding of output and exit code for custom exit handlers?
     - Renaming `Scenario` to something more appropriate?
 - Actual error handling
 - Ability to dump evaluated `Ruperfile` to some easily-readable format

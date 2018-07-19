@@ -71,6 +71,10 @@ module Rupervisor
       Actions::RunScenario.new(name)
     end
 
+    def call(&block)
+      Actions::Block.new(&block)
+    end
+
     def just_exit
       Actions::Exit.new
     end

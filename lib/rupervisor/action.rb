@@ -21,7 +21,35 @@ module Rupervisor
     end
   end
 
+  # TODO: Should these have analogues in the DSL class as well? Or is
+  # that a stupid idea in general?
   module Actions
+    class Block < Action
+      attr_accessor :args
+
+      def initialize(&block)
+        @block = block
+        @args = []
+      end
+
+      def call(ctx, last_action, last_result)
+        proc(&@block).call(*@args)
+      end
+
+      def with(*args)
+        @args = args
+        self
+      end
+
+      def to_s
+        "Block[args=#{@args}]"
+      end
+
+      def to_h
+        { type: 'Block', args: @args }
+      end
+    end
+
     class Exit < Action
       attr_accessor :rv
 
@@ -34,9 +62,8 @@ module Rupervisor
         self
       end
 
-      def call(_ctx, _last_action, last_result)
-        rv = @rv.nil? ? last_result : @rv
-        proc { exit rv }.call
+      def call(ctx, last_action, last_result)
+        proc { |rv| exit rv }.call(@rv.nil? ? last_result : @rv)
       end
 
       def to_s
